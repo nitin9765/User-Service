@@ -20,18 +20,19 @@ spring:
     bootstrap-servers: ${KAFKA_SERVER:localhost}:9092
     consumer:
       bootstrap-servers: ${KAFKA_SERVER:localhost}:9092
-      group-id: group_id
-      auto-offset-reset: earliest
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-    producer:
-      bootstrap-servers: ${KAFKA_SERVER:localhost}:9092
+      group-id: user_group
+
+      enable-auto-commit: false
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
     topic:
-      name: testingJson
+      name: user_details
+
 logging:
   level:
-    org.springframework.kafka.listener: warn
+    root: INFO
+    org.apache.kafka: WARN
+    kafka: WARN
+
 server:
-  port: 8081
+  port: 8082

@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.locks.ReentrantLock;
@@ -18,18 +19,19 @@ public class AuthServiceConsumer {
     private UserService userService;
     private final ReentrantLock lock = new ReentrantLock();
     private final ObjectMapper objectMapper = new ObjectMapper(); //
-    @KafkaListener(topics ="${spring.kafka.topic.name}")
-    public void listener(ConsumerRecord<String, String> data) {
-        lock.lock(); // Acquire the lock
+    @KafkaListener(topics ="${spring.kafka.topic.name}", groupId = "${spring.kafka.consumer.group-id}")
+    public void listener(ConsumerRecord<String, String> data, Acknowledgment acknowledgment) {
+        lock.lock();
         try {
-            String jsonValue = data.value(); // Extract JSON string
+            String jsonValue = data.value();
             UserDto userDto = objectMapper.readValue(jsonValue, UserDto.class);
-            userService.createOrUpdateUser(userDto);
+            userService.createOrUpdateUser(userDto.getUserId(), userDto);
+            acknowledgment.acknowledge();
             log.info("Received User: {}", userDto.toString());
         } catch (Exception e) {
             log.error("Error deserializing Kafka message: ", e);
         } finally {
-            lock.unlock(); // Release the lock
+            lock.unlock();
         }
     }
 }

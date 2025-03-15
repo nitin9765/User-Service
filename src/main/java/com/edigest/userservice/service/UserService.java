@@ -3,6 +3,7 @@ package com.edigest.userservice.service;
 import com.edigest.userservice.entity.User;
 import com.edigest.userservice.models.UserDto;
 import com.edigest.userservice.repository.UserRepository;
+import lombok.NonNull;
 import org.springframework.stereotype.Service;
 
 import javax.swing.text.html.Option;
@@ -19,7 +20,7 @@ public class UserService {
         this.userRepository=userRepository;
     }
 
-    public User createOrUpdateUser(UserDto userDto){
+    public User createOrUpdateUser(@NonNull String userId, UserDto userDto){
         UnaryOperator<User> updateUser= user->{
             if(userDto.getName()!=null && !userDto.getName().isEmpty()) user.setName(userDto.getName());
             if (userDto.getEmail() != null && !userDto.getEmail().isEmpty()) user.setEmail(userDto.getEmail());
@@ -27,21 +28,19 @@ public class UserService {
             return userRepository.save(user);
         };
         Supplier<User> createUser=()-> {
-            // TODO
             User newUser=User.builder()
                     .userId(userDto.getUserId())
-                    .id(Instant.now().toEpochMilli())
                     .phoneNumber(userDto.getPhoneNumber())
                     .name(userDto.getName())
                     .email(userDto.getEmail()).build();
             return userRepository.save(newUser);
         };
-        return userRepository.findByUserId(userDto.getUserId())
+        return userRepository.findByUserId(userId)
                 .map(updateUser).orElseGet(createUser);
     }
 
-    public UserDto getUser(UserDto userDto) throws Exception{
-        return userRepository.findByUserId(userDto.getUserId()).map(value->
+    public UserDto getUser(String userId) throws Exception{
+        return userRepository.findByUserId(userId).map(value->
                 UserDto.builder()
                         .name(value.getName())
                         .phoneNumber(value.getPhoneNumber())
